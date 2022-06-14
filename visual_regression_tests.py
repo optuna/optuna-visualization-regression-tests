@@ -1,3 +1,89 @@
+import argparse
+import os
+import warnings
+from typing import List, Tuple
+
+from jinja2 import Environment, FileSystemLoader
+import matplotlib.pylab as plt
 import optuna
+import optuna.visualization as plotly_visualization
+import optuna.visualization.matplotlib as matplotlib_visualization
+from optuna import Study
+from optuna.exceptions import ExperimentalWarning
+
+warnings.filterwarnings("ignore", category=ExperimentalWarning)
+
+optuna.logging.set_verbosity(optuna.logging.ERROR)
+
+template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
+parser = argparse.ArgumentParser()
+parser.add_argument("dir", help="output directory", default="tmp")
+args = parser.parse_args()
 
 
+def create_studies() -> List[Study]:
+    studies = []
+    storage = optuna.storages.InMemoryStorage()
+
+    # Single-objective study
+    study = optuna.create_study(study_name="single", storage=storage)
+
+    def objective_single(trial: optuna.Trial) -> float:
+        x1 = trial.suggest_float("x1", 0, 10)
+        x2 = trial.suggest_float("x2", 0, 10)
+        return (x1 - 2) ** 2 + (x2 - 5) ** 2
+
+    study.optimize(objective_single, n_trials=50)
+    studies.append(study)
+
+    # Single-objective study with dynamic search space
+    study = optuna.create_study(
+        study_name="single-dynamic", storage=storage, direction="maximize"
+    )
+
+    def objective_single_dynamic(trial: optuna.Trial) -> float:
+        category = trial.suggest_categorical("category", ["foo", "bar"])
+        if category == "foo":
+            return (trial.suggest_float("x1", 0, 10) - 2) ** 2
+        else:
+            return -((trial.suggest_float("x2", -10, 0) + 5) ** 2)
+
+    study.optimize(objective_single_dynamic, n_trials=50)
+    studies.append(study)
+    return studies
+
+
+def dump_optimization_plots(studies: List[Study], base_dir: str) -> List[Tuple[str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
+        plotly_fig = plotly_visualization.plot_optimization_history(study)
+        plotly_fig.write_image(plotly_filepath)
+
+        matplotlib_filepath = os.path.join(base_dir, f"{study.study_name}-matplotlib.png")
+        matplotlib_visualization.plot_optimization_history(study)
+        plt.savefig(matplotlib_filepath, bbox_inches="tight")
+
+        files.append((plotly_filepath, matplotlib_filepath))
+    return files
+
+
+def main():
+    studies = create_studies()
+    base_dir = os.path.abspath(args.dir)
+    if not os.path.exists(base_dir):
+        os.mkdir(base_dir)
+
+    print("Output Directory:", base_dir)
+    optimization_history_files = dump_optimization_plots(studies, base_dir)
+
+    # Render HTML
+    env = Environment(loader=FileSystemLoader(template_dirs))
+    template = env.get_template("index.html")
+
+    with open(os.path.join(args.dir, "index.html"), "w") as f:
+        f.write(template.render(optimization_history_files=optimization_history_files))
+
+
+if __name__ == "__main__":
+    main()
