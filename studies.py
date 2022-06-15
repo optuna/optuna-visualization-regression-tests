@@ -1,4 +1,5 @@
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 import optuna
 from optuna import Study
@@ -20,9 +21,7 @@ def create_single_objective_studies() -> List[Study]:
     studies.append(study)
 
     # Single-objective study with dynamic search space
-    study = optuna.create_study(
-        study_name="single-dynamic", storage=storage, direction="maximize"
-    )
+    study = optuna.create_study(study_name="single-dynamic", storage=storage, direction="maximize")
 
     def objective_single_dynamic(trial: optuna.Trial) -> float:
         category = trial.suggest_categorical("category", ["foo", "bar"])
@@ -85,13 +84,10 @@ def create_multi_objective_studies() -> List[Study]:
 
 
 def create_intermediate_value_studies() -> List[Study]:
-    # See https://github.com/optuna/optuna/blob/master/tests/visualization_tests/matplotlib_tests/test_intermediate_plot.py
     studies = []
     storage = optuna.storages.InMemoryStorage()
 
-    def objective_simple(
-        trial: optuna.Trial, report_intermediate_values: bool
-    ) -> float:
+    def objective_simple(trial: optuna.Trial, report_intermediate_values: bool) -> float:
         if report_intermediate_values:
             trial.report(1.0, step=0)
             trial.report(2.0, step=1)
