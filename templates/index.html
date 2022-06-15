@@ -23,10 +23,16 @@
         .plot-wrapper {
             display: flex;
             flex-direction: row;
+            align-items: center;
         }
         .plot {
             width: 50%;
             object-fit: contain;
+        }
+        .error-message {
+            font-weight: bold;
+            margin: 0 auto;
+            font-size: x-large;
         }
     </style>
 </head>
@@ -37,8 +43,16 @@
     {% for study, plotly_file, matplotlib_file in plot_files %}
     <h3>Study Name: {{ study.study_name }}</h3>
     <div class="plot-wrapper">
-        <img class="plot" src="{{ plotly_file }}">
-        <img class="plot" src="{{ matplotlib_file }}">
+        {% if plotly_file %}
+            <img class="plot" src="{{ plotly_file }}">
+        {% else %}
+            <p class="error-message">plotly's {{ funcname }} is failed</p>
+        {% endif %}
+        {% if matplotlib_file %}
+            <img class="plot" src="{{ matplotlib_file }}">
+        {% else %}
+            <p class="error-message">matplotlib's {{ funcname }} is failed</p>
+        {% endif %}
     </div>
     {% endfor %}
 </div>

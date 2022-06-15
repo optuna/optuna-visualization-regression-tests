@@ -98,18 +98,28 @@ def generate_contour_plots(
 ) -> List[Tuple[Study, str, str]]:
     files = []
     for study in studies:
-        plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
-        plotly_fig = plotly_visualization.plot_contour(study)
-        plotly_fig.update_layout(
-            width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
+        plotly_filepath = os.path.join(
+            base_dir, f"{study._study_id}-{study.study_name}-plotly.png"
         )
-        plotly_fig.write_image(plotly_filepath)
+        try:
+            plotly_fig = plotly_visualization.plot_contour(study)
+            plotly_fig.update_layout(
+                width=figsize[0] * dpi,
+                height=figsize[1] * dpi,
+                margin={"l": 10, "r": 10},
+            )
+            plotly_fig.write_image(plotly_filepath)
+        except:
+            plotly_fig = ""
 
         matplotlib_filepath = os.path.join(
-            base_dir, f"{study.study_name}-matplotlib.png"
+            base_dir, f"{study._study_id}-{study.study_name}-matplotlib.png"
         )
-        matplotlib_visualization.plot_contour(study)
-        plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+        try:
+            matplotlib_visualization.plot_contour(study)
+            plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+        except:
+            matplotlib_filepath = ""
 
         files.append((study, plotly_filepath, matplotlib_filepath))
     return files
@@ -166,7 +176,9 @@ def generate_param_importances_plots(
     seed = 0
     for study in studies:
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
-        plotly_fig = plotly_visualization.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(seed=seed))
+        plotly_fig = plotly_visualization.plot_param_importances(
+            study, evaluator=FanovaImportanceEvaluator(seed=seed)
+        )
         plotly_fig.update_layout(
             width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
         )
@@ -175,7 +187,9 @@ def generate_param_importances_plots(
         matplotlib_filepath = os.path.join(
             base_dir, f"{study.study_name}-matplotlib.png"
         )
-        matplotlib_visualization.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(seed=seed))
+        matplotlib_visualization.plot_param_importances(
+            study, evaluator=FanovaImportanceEvaluator(seed=seed)
+        )
         plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
 
         files.append((study, plotly_filepath, matplotlib_filepath))
@@ -230,10 +244,7 @@ def main():
     template = env.get_template("index.html")
 
     with open(os.path.join(base_dir, "index.html"), "w") as f:
-        f.write(template.render(
-            funcname=f"{args.func}()",
-            plot_files=plot_files)
-        )
+        f.write(template.render(funcname=f"{args.func}()", plot_files=plot_files))
     print("index.html:", os.path.join(base_dir, "index.html"))
 
 
