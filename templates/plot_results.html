@@ -33,20 +33,19 @@
 </head>
 <body>
 <div class="wrapper">
-    <h1>Optuna Visual Regression Tests</h1>
-    <h2>{{ funcname }}</h2>
+    <h1>{{ funcname }}</h1>
     {% for study, plotly_file, matplotlib_file in plot_files %}
-    <h3>Study Name: {{ study.study_name }}</h3>
+    <h2>Study Name: {{ study.study_name }}</h2>
     <div class="plot-wrapper">
         {% if plotly_file %}
-            <img class="plot" src="{{ plotly_file }}">
+        <img class="plot" src="{{ plotly_file }}">
         {% else %}
-            <p class="error-message">plotly's {{ funcname }} is failed</p>
+        <p class="error-message">plotly's {{ funcname }} is failed</p>
         {% endif %}
         {% if matplotlib_file %}
-            <img class="plot" src="{{ matplotlib_file }}">
+        <img class="plot" src="{{ matplotlib_file }}">
         {% else %}
-            <p class="error-message">matplotlib's {{ funcname }} is failed</p>
+        <p class="error-message">matplotlib's {{ funcname }} is failed</p>
         {% endif %}
     </div>
     {% endfor %}
