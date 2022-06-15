@@ -13,6 +13,7 @@ from optuna.exceptions import ExperimentalWarning
 
 from studies import create_single_objective_studies
 from studies import create_intermediate_value_studies
+from studies import create_multi_objective_studies
 
 try:
     from optuna_fast_fanova import FanovaImportanceEvaluator
@@ -31,13 +32,20 @@ plot_functions = [
     "plot_parallel_coordinate",
     "plot_slice",
     "plot_intermediate_values",
+    "plot_pareto_front",
 ]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("func", help="plot function name", choices=plot_functions)
-parser.add_argument("--output-dir", help="output directory (default: %(default)s)", default="tmp")
-parser.add_argument("--width", help="plot width (default: %(default)s)", type=int, default=800)
-parser.add_argument("--height", help="plot height (default: %(default)s)", type=int, default=600)
+parser.add_argument(
+    "--output-dir", help="output directory (default: %(default)s)", default="tmp"
+)
+parser.add_argument(
+    "--width", help="plot width (default: %(default)s)", type=int, default=800
+)
+parser.add_argument(
+    "--height", help="plot height (default: %(default)s)", type=int, default=600
+)
 args = parser.parse_args()
 
 dpi = 100
@@ -52,9 +60,7 @@ def generate_optimization_history_plots(
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
         plotly_fig = plotly_visualization.plot_optimization_history(study)
         plotly_fig.update_layout(
-            width=args.width,
-            height=args.height,
-            margin={"l": 10, "r": 10}
+            width=args.width, height=args.height, margin={"l": 10, "r": 10}
         )
         plotly_fig.write_image(plotly_filepath)
 
@@ -108,9 +114,7 @@ def generate_edf_plots(
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
         plotly_fig = plotly_visualization.plot_edf(study)
         plotly_fig.update_layout(
-            width=args.width,
-            height=args.height,
-            margin={"l": 10, "r": 10}
+            width=args.width, height=args.height, margin={"l": 10, "r": 10}
         )
         plotly_fig.write_image(plotly_filepath)
 
@@ -132,9 +136,7 @@ def generate_slice_plots(
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
         plotly_fig = plotly_visualization.plot_slice(study)
         plotly_fig.update_layout(
-            width=args.width,
-            height=args.height,
-            margin={"l": 10, "r": 10}
+            width=args.width, height=args.height, margin={"l": 10, "r": 10}
         )
         plotly_fig.write_image(plotly_filepath)
 
@@ -159,9 +161,7 @@ def generate_param_importances_plots(
             study, evaluator=FanovaImportanceEvaluator(seed=seed)
         )
         plotly_fig.update_layout(
-            width=args.width,
-            height=args.height,
-            margin={"l": 10, "r": 10}
+            width=args.width, height=args.height, margin={"l": 10, "r": 10}
         )
         plotly_fig.write_image(plotly_filepath)
 
@@ -185,9 +185,7 @@ def generate_parallel_coordinate_plots(
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
         plotly_fig = plotly_visualization.plot_parallel_coordinate(study)
         plotly_fig.update_layout(
-            width=args.width,
-            height=args.height,
-            margin={"l": 10, "r": 10}
+            width=args.width, height=args.height, margin={"l": 10, "r": 10}
         )
         plotly_fig.write_image(plotly_filepath)
 
@@ -233,6 +231,38 @@ def generate_intermediate_value_plots(
     return files
 
 
+def generate_pareto_front_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(
+            base_dir, f"{study._study_id}-{study.study_name}-plotly.png"
+        )
+        try:
+            plotly_fig = plotly_visualization.plot_pareto_front(study)
+            plotly_fig.update_layout(
+                width=args.width,
+                height=args.height,
+                margin={"l": 10, "r": 10},
+            )
+            plotly_fig.write_image(plotly_filepath)
+        except:
+            plotly_fig = ""
+
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study._study_id}-{study.study_name}-matplotlib.png"
+        )
+        try:
+            matplotlib_visualization.plot_pareto_front(study)
+            plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+        except:
+            matplotlib_filepath = ""
+
+        files.append((study, plotly_filepath, matplotlib_filepath))
+    return files
+
+
 def main():
     base_dir = os.path.abspath(args.output_dir)
     if not os.path.exists(base_dir):
@@ -259,6 +289,9 @@ def main():
     elif args.func == "plot_intermediate_values":
         studies = create_intermediate_value_studies()
         plot_files = generate_intermediate_value_plots(studies, base_dir)
+    elif args.func == "plot_pareto_front":
+        studies = create_multi_objective_studies()
+        plot_files = generate_pareto_front_plots(studies, base_dir)
     else:
         assert False, "must not reach here"
 
