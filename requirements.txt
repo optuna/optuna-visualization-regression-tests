@@ -4,6 +4,8 @@ matplotlib
 plotly
 kaleido
 jinja2
+scikit-learn
+optuna-fast-fanova
 
 # linter / formatter
 isort
