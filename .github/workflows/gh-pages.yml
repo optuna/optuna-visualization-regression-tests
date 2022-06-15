@@ -24,7 +24,7 @@ jobs:
       - name: Install additional dependencies
         run: pip install matplotlib plotly kaleido jinja2 scikit-learn optuna-fast-fanova
       - name: Generate HTML
-        run: python visual_regression_tests.py
+        run: python visual_regression_tests.py --output-dir ./docs
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}
