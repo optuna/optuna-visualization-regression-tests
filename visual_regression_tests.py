@@ -1,5 +1,6 @@
 import argparse
 import os
+from os.path import relpath
 from typing import Callable
 from typing import List
 from typing import Tuple
@@ -49,6 +50,7 @@ parser.add_argument("func", help="plot function name", choices=plot_functions)
 parser.add_argument("--output-dir", help="output directory (default: %(default)s)", default="tmp")
 parser.add_argument("--width", help="plot width (default: %(default)s)", type=int, default=800)
 parser.add_argument("--height", help="plot height (default: %(default)s)", type=int, default=600)
+parser.add_argument("--relpath", help="Use relative path for img link", action='store_true')
 args = parser.parse_args()
 
 dpi = 100
@@ -213,9 +215,20 @@ def main():
     env = Environment(loader=FileSystemLoader(template_dirs))
     template = env.get_template("index.html")
 
+    if args.relpath:
+        plot_files = [(study, relpath(file1, base_dir), relpath(file2, base_dir)) for study, file1, file2 in plot_files]
+
     with open(os.path.join(base_dir, "index.html"), "w") as f:
         f.write(template.render(funcname=f"{args.func}()", plot_files=plot_files))
-    print("index.html:", os.path.join(base_dir, "index.html"))
+
+    if args.relpath:
+        print("Output Directory:", base_dir)
+        print("Please above command to check the output.")
+        print("")
+        print(f"  python3 -m http.server --directory {base_dir}")
+        print("")
+    else:
+        print("index.html:", os.path.join(base_dir, "index.html"))
 
 
 if __name__ == "__main__":

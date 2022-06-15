@@ -10,7 +10,7 @@ $ pip install -r requirements.txt
 
 ```
 $ python visual_regression_tests.py --help
-usage: visual_regression_tests.py [-h] [--output-dir OUTPUT_DIR] [--width WIDTH] [--height HEIGHT]
+usage: visual_regression_tests.py [-h] [--output-dir OUTPUT_DIR] [--width WIDTH] [--height HEIGHT] [--relpath]
                                   {plot_contour,plot_edf,plot_optimization_history,plot_param_importances,plot_parallel_coordinate,plot_slice,plot_intermediate_values,plot_pareto_front}
 
 positional arguments:
@@ -23,6 +23,7 @@ optional arguments:
                         output directory (default: tmp)
   --width WIDTH         plot width (default: 800)
   --height HEIGHT       plot height (default: 600)
+  --relpath             Use relative path for img link
 ```
 
 ## Example Output
