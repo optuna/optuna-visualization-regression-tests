@@ -12,15 +12,20 @@ from optuna import Study
 from optuna.exceptions import ExperimentalWarning
 
 warnings.filterwarnings("ignore", category=ExperimentalWarning)
-
 optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 figsize = (8, 6)
 dpi = 100
 plt.rcParams["figure.figsize"] = figsize
+
 template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
+plot_functions = [
+    "plot_optimization_history",
+]
+
 parser = argparse.ArgumentParser()
-parser.add_argument("dir", help="output directory", default="tmp")
+parser.add_argument("func", help="plot function name", choices=plot_functions)
+parser.add_argument("--dir", help="output directory", default="tmp")
 args = parser.parse_args()
 
 
@@ -84,14 +89,20 @@ def main():
     if not os.path.exists(base_dir):
         os.mkdir(base_dir)
 
-    optimization_history_files = dump_optimization_plots(studies, base_dir)
+    if args.func == "plot_optimization_history":
+        plot_files = dump_optimization_plots(studies, base_dir)
+    else:
+        assert False, "must not reach here"
 
     # Render HTML
     env = Environment(loader=FileSystemLoader(template_dirs))
     template = env.get_template("index.html")
 
     with open(os.path.join(base_dir, "index.html"), "w") as f:
-        f.write(template.render(optimization_history_files=optimization_history_files))
+        f.write(template.render(
+            funcname=f"{args.func}()",
+            plot_files=plot_files)
+        )
     print("index.html:", os.path.join(base_dir, "index.html"))
 
 
