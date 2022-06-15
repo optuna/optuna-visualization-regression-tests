@@ -1,6 +1,12 @@
 # optuna-visualization-regression-tests
 
-## How to run
+This tool continuously runs on GitHub Actions with Optuna's master branch.
+The output artifact is pushed to gh-pages branch.
+You can check the output from the below link.
+
+https://c-bata.link/optuna-visualization-regression-tests/index.html
+
+## Usage
 
 ```
 $ pip install -r requirements.txt
