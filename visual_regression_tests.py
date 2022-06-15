@@ -3,11 +3,11 @@ import os
 import warnings
 from typing import List, Tuple
 
-from jinja2 import Environment, FileSystemLoader
 import matplotlib.pylab as plt
 import optuna
 import optuna.visualization as plotly_visualization
 import optuna.visualization.matplotlib as matplotlib_visualization
+from jinja2 import Environment, FileSystemLoader
 from optuna import Study
 from optuna.exceptions import ExperimentalWarning
 
@@ -15,6 +15,9 @@ warnings.filterwarnings("ignore", category=ExperimentalWarning)
 
 optuna.logging.set_verbosity(optuna.logging.ERROR)
 
+figsize = (8, 6)
+dpi = 100
+plt.rcParams["figure.figsize"] = figsize
 template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
 parser = argparse.ArgumentParser()
 parser.add_argument("dir", help="output directory", default="tmp")
@@ -53,18 +56,25 @@ def create_studies() -> List[Study]:
     return studies
 
 
-def dump_optimization_plots(studies: List[Study], base_dir: str) -> List[Tuple[str, str]]:
+def dump_optimization_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
     files = []
     for study in studies:
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
         plotly_fig = plotly_visualization.plot_optimization_history(study)
+        plotly_fig.update_layout(
+            width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
+        )
         plotly_fig.write_image(plotly_filepath)
 
-        matplotlib_filepath = os.path.join(base_dir, f"{study.study_name}-matplotlib.png")
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study.study_name}-matplotlib.png"
+        )
         matplotlib_visualization.plot_optimization_history(study)
-        plt.savefig(matplotlib_filepath, bbox_inches="tight")
+        plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
 
-        files.append((plotly_filepath, matplotlib_filepath))
+        files.append((study, plotly_filepath, matplotlib_filepath))
     return files
 
 

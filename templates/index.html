@@ -15,14 +15,18 @@ body {
 }
 .wrapper {
     padding: 64px;
-    width: 1200px;
     background-color: rgb(255, 255, 255);
     box-shadow: rgba(0, 0, 0, 0.08) 0 8px 24px;
     margin: 0px auto;
     border-radius: 8px;
 }
+.plot-wrapper {
+    display: flex;
+    flex-direction: row;
+}
 .plot {
-    max-width: 100%;
+    width: 50%;
+    object-fit: contain;
 }
 </style>
 </head>
@@ -30,18 +34,12 @@ body {
     <div class="wrapper">
         <h1>Optuna Visual Regression Tests</h1>
         <h2>plot_optimization_history()</h2>
-        <table>
-            <tr>
-                <th>matplotlib</th>
-                <th>plotly</th>
-            </tr>
-            {% for plotly_file, matplotlib_file in optimization_history_files %}
-            <tr>
-                <td><img class="plot" src="{{ plotly_file }}"></th>
-                <td><img class="plot" src="{{ matplotlib_file }}"></th>
-            </tr>
-            {% endfor %}
-        </table>
+        {% for study, plotly_file, matplotlib_file in optimization_history_files %}
+        <div class="plot-wrapper">
+            <img class="plot" src="{{ plotly_file }}">
+            <img class="plot" src="{{ matplotlib_file }}">
+        </div>
+        {% endfor %}
     </div>
 </body>
 </html>
