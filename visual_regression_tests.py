@@ -84,15 +84,15 @@ def main():
     if not os.path.exists(base_dir):
         os.mkdir(base_dir)
 
-    print("Output Directory:", base_dir)
     optimization_history_files = dump_optimization_plots(studies, base_dir)
 
     # Render HTML
     env = Environment(loader=FileSystemLoader(template_dirs))
     template = env.get_template("index.html")
 
-    with open(os.path.join(args.dir, "index.html"), "w") as f:
+    with open(os.path.join(base_dir, "index.html"), "w") as f:
         f.write(template.render(optimization_history_files=optimization_history_files))
+    print("index.html:", os.path.join(base_dir, "index.html"))
 
 
 if __name__ == "__main__":
