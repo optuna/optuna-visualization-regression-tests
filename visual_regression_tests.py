@@ -22,6 +22,7 @@ template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templ
 plot_functions = [
     "plot_optimization_history",
     "plot_edf",
+    "plot_slice",
 ]
 
 parser = argparse.ArgumentParser()
@@ -106,6 +107,28 @@ def generate_edf_plots(
     return files
 
 
+def generate_slice_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
+        plotly_fig = plotly_visualization.plot_slice(study)
+        plotly_fig.update_layout(
+            width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
+        )
+        plotly_fig.write_image(plotly_filepath)
+
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study.study_name}-matplotlib.png"
+        )
+        matplotlib_visualization.plot_slice(study)
+        plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+
+        files.append((study, plotly_filepath, matplotlib_filepath))
+    return files
+
+
 def main():
     studies = create_studies()
     base_dir = os.path.abspath(args.dir)
@@ -116,6 +139,8 @@ def main():
         plot_files = generate_optimization_history_plots(studies, base_dir)
     elif args.func == "plot_edf":
         plot_files = generate_edf_plots(studies, base_dir)
+    elif args.func == "plot_slice":
+        plot_files = generate_slice_plots(studies, base_dir)
     else:
         assert False, "must not reach here"
 
