@@ -25,10 +25,11 @@ plt.rcParams["figure.figsize"] = figsize
 
 template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
 plot_functions = [
-    "plot_optimization_history",
     "plot_edf",
-    "plot_slice",
+    "plot_optimization_history",
     "plot_param_importances",
+    "plot_parallel_coordinate",
+    "plot_slice",
 ]
 
 parser = argparse.ArgumentParser()
@@ -139,9 +140,10 @@ def generate_param_importances_plots(
     studies: List[Study], base_dir: str
 ) -> List[Tuple[Study, str, str]]:
     files = []
+    seed = 0
     for study in studies:
         plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
-        plotly_fig = plotly_visualization.plot_param_importances(study, evaluator=FanovaImportanceEvaluator())
+        plotly_fig = plotly_visualization.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(seed=seed))
         plotly_fig.update_layout(
             width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
         )
@@ -150,7 +152,29 @@ def generate_param_importances_plots(
         matplotlib_filepath = os.path.join(
             base_dir, f"{study.study_name}-matplotlib.png"
         )
-        matplotlib_visualization.plot_param_importances(study)
+        matplotlib_visualization.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(seed=seed))
+        plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+
+        files.append((study, plotly_filepath, matplotlib_filepath))
+    return files
+
+
+def generate_parallel_coordinate_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
+        plotly_fig = plotly_visualization.plot_parallel_coordinate(study)
+        plotly_fig.update_layout(
+            width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
+        )
+        plotly_fig.write_image(plotly_filepath)
+
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study.study_name}-matplotlib.png"
+        )
+        matplotlib_visualization.plot_parallel_coordinate(study)
         plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
 
         files.append((study, plotly_filepath, matplotlib_filepath))
@@ -171,6 +195,8 @@ def main():
         plot_files = generate_slice_plots(studies, base_dir)
     elif args.func == "plot_param_importances":
         plot_files = generate_param_importances_plots(studies, base_dir)
+    elif args.func == "plot_parallel_coordinate":
+        plot_files = generate_parallel_coordinate_plots(studies, base_dir)
     else:
         assert False, "must not reach here"
 
