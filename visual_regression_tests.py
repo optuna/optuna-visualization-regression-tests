@@ -25,6 +25,7 @@ plt.rcParams["figure.figsize"] = figsize
 
 template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
 plot_functions = [
+    "plot_contour",
     "plot_edf",
     "plot_optimization_history",
     "plot_param_importances",
@@ -86,6 +87,28 @@ def generate_optimization_history_plots(
             base_dir, f"{study.study_name}-matplotlib.png"
         )
         matplotlib_visualization.plot_optimization_history(study)
+        plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+
+        files.append((study, plotly_filepath, matplotlib_filepath))
+    return files
+
+
+def generate_contour_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(base_dir, f"{study.study_name}-plotly.png")
+        plotly_fig = plotly_visualization.plot_contour(study)
+        plotly_fig.update_layout(
+            width=figsize[0] * dpi, height=figsize[1] * dpi, margin={"l": 10, "r": 10}
+        )
+        plotly_fig.write_image(plotly_filepath)
+
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study.study_name}-matplotlib.png"
+        )
+        matplotlib_visualization.plot_contour(study)
         plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
 
         files.append((study, plotly_filepath, matplotlib_filepath))
@@ -189,6 +212,8 @@ def main():
 
     if args.func == "plot_optimization_history":
         plot_files = generate_optimization_history_plots(studies, base_dir)
+    elif args.func == "plot_contour":
+        plot_files = generate_contour_plots(studies, base_dir)
     elif args.func == "plot_edf":
         plot_files = generate_edf_plots(studies, base_dir)
     elif args.func == "plot_slice":
