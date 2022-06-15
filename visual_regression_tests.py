@@ -12,6 +12,7 @@ from optuna import Study
 from optuna.exceptions import ExperimentalWarning
 
 from studies import create_single_objective_studies
+from studies import create_intermediate_value_studies
 
 try:
     from optuna_fast_fanova import FanovaImportanceEvaluator
@@ -29,6 +30,7 @@ plot_functions = [
     "plot_param_importances",
     "plot_parallel_coordinate",
     "plot_slice",
+    "plot_intermediate_values",
 ]
 
 parser = argparse.ArgumentParser()
@@ -199,6 +201,38 @@ def generate_parallel_coordinate_plots(
     return files
 
 
+def generate_intermediate_value_plots(
+    studies: List[Study], base_dir: str
+) -> List[Tuple[Study, str, str]]:
+    files = []
+    for study in studies:
+        plotly_filepath = os.path.join(
+            base_dir, f"{study._study_id}-{study.study_name}-plotly.png"
+        )
+        try:
+            plotly_fig = plotly_visualization.plot_intermediate_values(study)
+            plotly_fig.update_layout(
+                width=args.width,
+                height=args.height,
+                margin={"l": 10, "r": 10},
+            )
+            plotly_fig.write_image(plotly_filepath)
+        except:
+            plotly_fig = ""
+
+        matplotlib_filepath = os.path.join(
+            base_dir, f"{study._study_id}-{study.study_name}-matplotlib.png"
+        )
+        try:
+            matplotlib_visualization.plot_intermediate_values(study)
+            plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
+        except:
+            matplotlib_filepath = ""
+
+        files.append((study, plotly_filepath, matplotlib_filepath))
+    return files
+
+
 def main():
     base_dir = os.path.abspath(args.output_dir)
     if not os.path.exists(base_dir):
@@ -222,6 +256,9 @@ def main():
     elif args.func == "plot_parallel_coordinate":
         studies = create_single_objective_studies()
         plot_files = generate_parallel_coordinate_plots(studies, base_dir)
+    elif args.func == "plot_intermediate_values":
+        studies = create_intermediate_value_studies()
+        plot_files = generate_intermediate_value_plots(studies, base_dir)
     else:
         assert False, "must not reach here"
 

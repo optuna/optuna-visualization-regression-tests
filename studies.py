@@ -34,3 +34,34 @@ def create_single_objective_studies() -> List[Study]:
     study.optimize(objective_single_dynamic, n_trials=50)
     studies.append(study)
     return studies
+
+
+def create_intermediate_value_studies() -> List[Study]:
+    # See https://github.com/optuna/optuna/blob/master/tests/visualization_tests/matplotlib_tests/test_intermediate_plot.py
+    studies = []
+    storage = optuna.storages.InMemoryStorage()
+
+    def objective_simple(trial: optuna.Trial, report_intermediate_values: bool) -> float:
+        if report_intermediate_values:
+            trial.report(1.0, step=0)
+            trial.report(2.0, step=1)
+        return 0.0
+
+    def fail_objective(_: optuna.Trial) -> float:
+        raise ValueError
+
+    study = optuna.create_study(study_name="study with 1 trial", storage=storage)
+    study.optimize(lambda t: objective_simple(t, True), n_trials=1)
+    studies.append(study)
+
+    study = optuna.create_study(study_name="study with only 1 trial that has no intermediate value", storage=storage)
+    study.optimize(lambda t: objective_simple(t, False), n_trials=1)
+    studies.append(study)
+
+    study = optuna.create_study(study_name="only failed trials", storage=storage)
+    study.optimize(fail_objective, n_trials=1, catch=(ValueError,))
+    studies.append(study)
+
+    study = optuna.create_study(study_name="no trials", storage=storage)
+    studies.append(study)
+    return studies
