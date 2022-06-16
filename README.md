@@ -10,7 +10,7 @@ https://c-bata.link/optuna-visualization-regression-tests/index.html
 
 ```
 $ pip install -r requirements.txt
-$ python visual_regression_tests.py plot_optimization_history --output-dir /tmp/foo
+$ python visual_regression_tests.py --output-dir /tmp/foo --heavy
 Generated to: /tmp/foo/index.html
 ```
 
@@ -40,16 +40,3 @@ Generated to: /tmp/foo/index.html
 
 ### `plot_param_importances()`
 
-## CLI Options
-
-```
-$ python visual_regression_tests.py --help
-usage: visual_regression_tests.py [-h] [--output-dir OUTPUT_DIR] [--width WIDTH] [--height HEIGHT] [--relpath]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --output-dir OUTPUT_DIR
-                        output directory (default: tmp)
-  --width WIDTH         plot width (default: 800)
-  --height HEIGHT       plot height (default: 600)
-```
