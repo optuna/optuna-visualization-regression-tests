@@ -168,10 +168,10 @@ def create_pytorch_studies() -> List[Study]:
     N_TRAIN_EXAMPLES = BATCHSIZE * 30
     N_VALID_EXAMPLES = BATCHSIZE * 10
 
-    def define_model(trial):
+    def define_model(trial: optuna.Trial) -> "torch.nn.Module":
         # We optimize the number of layers, hidden units and dropout ratio in each layer.
         n_layers = trial.suggest_int("n_layers", 1, 3)
-        layers = []
+        layers: List["torch.nn.Module"] = []
 
         in_features = 28 * 28
         for i in range(n_layers):
@@ -187,7 +187,7 @@ def create_pytorch_studies() -> List[Study]:
 
         return nn.Sequential(*layers)
 
-    def get_mnist():
+    def get_mnist() -> Tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
         # Load FashionMNIST dataset.
         train_loader = torch.utils.data.DataLoader(
             datasets.FashionMNIST(DIR, train=True, download=True, transform=transforms.ToTensor()),
@@ -202,13 +202,15 @@ def create_pytorch_studies() -> List[Study]:
 
         return train_loader, valid_loader
 
-    def objective(trial):
+    def objective(trial: optuna.Trial) -> float:
 
         # Generate the model.
         model = define_model(trial).to(DEVICE)
 
         # Generate the optimizers.
-        optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
+        optimizer_name: str = trial.suggest_categorical(
+            "optimizer", ["Adam", "RMSprop", "SGD"]
+        )  # type: ignore
         lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
         optimizer = getattr(optim, optimizer_name)(model.parameters(), lr=lr)
 
@@ -245,7 +247,7 @@ def create_pytorch_studies() -> List[Study]:
                     pred = output.argmax(dim=1, keepdim=True)
                     correct += pred.eq(target.view_as(pred)).sum().item()
 
-            accuracy = correct / min(len(valid_loader.dataset), N_VALID_EXAMPLES)
+            accuracy = correct / min(len(valid_loader.dataset), N_VALID_EXAMPLES)  # type: ignore
 
             trial.report(accuracy, epoch)
 

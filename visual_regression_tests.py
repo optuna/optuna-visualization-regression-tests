@@ -175,7 +175,7 @@ def generate_pareto_front_plots(
     )
 
 
-def main():
+def main() -> None:
     if not os.path.exists(abs_output_dir):
         os.mkdir(abs_output_dir)
 
