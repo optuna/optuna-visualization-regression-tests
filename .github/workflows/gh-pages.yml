@@ -21,10 +21,16 @@ jobs:
           git config user.email github-actions@github.com
           git clone https://github.com/optuna/optuna.git
           pip install optuna/
+      - name: Cache kurobako CLI
+        id: cache-torch-dataset
+        uses: actions/cache@v2
+        with:
+          path: ./FashionMNIST
+          key: fasion-mnist
       - name: Install additional dependencies
-        run: pip install matplotlib plotly kaleido jinja2 scikit-learn optuna-fast-fanova
+        run: pip install matplotlib plotly kaleido jinja2 scikit-learn optuna-fast-fanova torch torchvision
       - name: Generate HTML
-        run: python visual_regression_tests.py --output-dir ./docs
+        run: python visual_regression_tests.py --heavy --output-dir ./docs
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}

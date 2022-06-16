@@ -17,6 +17,7 @@ import optuna.visualization.matplotlib as matplotlib_visualization
 
 from studies import create_intermediate_value_studies
 from studies import create_multi_objective_studies
+from studies import create_pytorch_studies
 from studies import create_single_objective_studies
 
 
@@ -36,6 +37,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--output-dir", help="output directory (default: %(default)s)", default="tmp")
 parser.add_argument("--width", help="plot width (default: %(default)s)", type=int, default=800)
 parser.add_argument("--height", help="plot height (default: %(default)s)", type=int, default=600)
+parser.add_argument("--heavy", help="create studies that takes long time", action="store_true")
 args = parser.parse_args()
 
 template_dirs = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")]
@@ -181,9 +183,16 @@ def main():
     plot_results_template = env.get_template("plot_results.html")
     list_pages_template = env.get_template("list_pages.html")
 
+    print("Creating single objective studies")
     single_objective_studies = create_single_objective_studies()
+    print("Creating multi objective studies")
     multi_objective_studies = create_multi_objective_studies()
+    print("Creating studies that have intermediate values")
     intermediate_value_studies = create_intermediate_value_studies()
+
+    if args.heavy:
+        print("Creating pytorch studies")
+        intermediate_value_studies = create_pytorch_studies() + intermediate_value_studies
 
     pages: List[Tuple[str, str]] = []
     for funcname, studies, generate in [
@@ -192,17 +201,17 @@ def main():
             single_objective_studies,
             generate_optimization_history_plots,
         ),
-        ("plot_pareto_front", multi_objective_studies, generate_pareto_front_plots),
-        ("plot_contour", single_objective_studies, generate_contour_plots),
-        ("plot_edf", single_objective_studies, generate_edf_plots),
         ("plot_slice", single_objective_studies, generate_slice_plots),
-        ("plot_param_importances", single_objective_studies, generate_param_importances_plots),
+        ("plot_contour", single_objective_studies, generate_contour_plots),
         ("plot_parallel_coordinate", single_objective_studies, generate_parallel_coordinate_plots),
         (
             "plot_intermediate_values",
             intermediate_value_studies,
             generate_intermediate_value_plots,
         ),
+        ("plot_pareto_front", multi_objective_studies, generate_pareto_front_plots),
+        ("plot_param_importances", single_objective_studies, generate_param_importances_plots),
+        ("plot_edf", single_objective_studies, generate_edf_plots),
     ]:
         plot_files = generate(studies, abs_output_dir)
 

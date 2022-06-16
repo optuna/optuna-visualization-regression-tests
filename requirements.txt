@@ -7,6 +7,9 @@ jinja2
 scikit-learn
 optuna-fast-fanova
 
+torch
+torchvision
+
 # linter / formatter
 isort
 black
