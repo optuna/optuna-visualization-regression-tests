@@ -17,7 +17,7 @@ import optuna.visualization.matplotlib as matplotlib_visualization
 
 from studies import create_intermediate_value_studies
 from studies import create_multi_objective_studies
-from studies import create_pytorch_studies
+from studies import create_pytorch_study
 from studies import create_single_objective_studies
 
 
@@ -191,8 +191,10 @@ def main() -> None:
     intermediate_value_studies = create_intermediate_value_studies()
 
     if args.heavy:
-        print("Creating pytorch studies")
-        intermediate_value_studies = create_pytorch_studies() + intermediate_value_studies
+        print("Creating pytorch study")
+        pytorch_study = create_pytorch_study()
+        single_objective_studies.append(pytorch_study)
+        intermediate_value_studies.insert(0, pytorch_study)
 
     pages: List[Tuple[str, str]] = []
     for funcname, studies, generate in [

@@ -147,7 +147,7 @@ def create_intermediate_value_studies() -> List[Study]:
     return studies
 
 
-def create_pytorch_studies() -> List[Study]:
+def create_pytorch_study() -> Study:
     try:
         import torch
         import torch.nn as nn
@@ -260,5 +260,5 @@ def create_pytorch_studies() -> List[Study]:
     study = optuna.create_study(
         direction="maximize", study_name="pytorch_simple.py in optuna-example"
     )
-    study.optimize(objective, n_trials=25, timeout=600)
-    return [study]
+    study.optimize(objective, n_trials=50, timeout=600)
+    return study
