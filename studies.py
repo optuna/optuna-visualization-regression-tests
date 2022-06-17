@@ -38,11 +38,11 @@ def create_single_objective_studies() -> List[Study]:
         else:
             return -((trial.suggest_float("x2", -10, 0) + 5) ** 2)
 
-    # No trials single-objective study
-    optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
-
     study.optimize(objective_single_dynamic, n_trials=50)
     studies.append(study)
+
+    # No trials single-objective study
+    optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
     return studies
 
 
