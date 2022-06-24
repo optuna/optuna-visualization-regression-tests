@@ -1,5 +1,4 @@
-# requirements
-optuna==3.0.0b1
+optuna>=3.0.0b1
 matplotlib
 plotly
 kaleido
@@ -10,8 +9,3 @@ optuna-fast-fanova
 torch
 torchvision
 
-# linter / formatter
-isort
-black
-flake8
-mypy
