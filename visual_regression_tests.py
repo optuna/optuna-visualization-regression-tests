@@ -1,9 +1,13 @@
 import argparse
+import functools
 import os
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import TYPE_CHECKING
+from typing import TypeVar
+from typing import Union
 import warnings
 
 from jinja2 import Environment
@@ -17,9 +21,13 @@ import optuna.visualization.matplotlib as matplotlib_visualization
 
 from studies import create_intermediate_value_studies
 from studies import create_multi_objective_studies
+from studies import create_multiple_single_objective_studies
 from studies import create_pytorch_study
 from studies import create_single_objective_studies
+from studies import StudiesType
 
+
+FigureType = TypeVar("FigureType")
 
 try:
     from optuna_fast_fanova import FanovaImportanceEvaluator
@@ -46,18 +54,29 @@ dpi = 100
 plt.rcParams["figure.figsize"] = (args.width / dpi, args.height / dpi)
 
 
+def wrap_plot_func(
+    plot_func: Callable[[Study], FigureType]
+) -> Callable[[StudiesType], FigureType]:
+    @functools.wraps(plot_func)
+    def wrapper(studies: StudiesType) -> FigureType:
+        assert isinstance(studies, Study)
+        return plot_func(studies)
+
+    return wrapper
+
+
 def generate_plot_files(
-    studies: List[Study],
+    studies: Dict[str, StudiesType],
     base_dir: str,
-    plotly_plot: Callable[[Study], "go.Figure"],
-    matplotlib_plot: Callable[[Study], "Axes"],
+    plotly_plot: Callable[[StudiesType], "go.Figure"],
+    matplotlib_plot: Callable[[StudiesType], "Axes"],
     filename_prefix: str,
-) -> List[Tuple[Study, str, str]]:
+) -> List[Tuple[str, str, str]]:
     files = []
-    for study in studies:
-        plotly_filename = f"{filename_prefix}-{study.study_name}-plotly.png"
+    for title, study in studies.items():
+        plotly_filename = f"{filename_prefix}-{title}-plotly.png"
         plotly_filepath = os.path.join(base_dir, plotly_filename)
-        matplotlib_filename = f"{filename_prefix}-{study.study_name}-matplotlib.png"
+        matplotlib_filename = f"{filename_prefix}-{title}-matplotlib.png"
         matplotlib_filepath = os.path.join(base_dir, matplotlib_filename)
         try:
             plotly_fig = plotly_plot(study)
@@ -76,13 +95,13 @@ def generate_plot_files(
         except:  # NOQA
             matplotlib_filename = ""
 
-        files.append((study, plotly_filename, matplotlib_filename))
+        files.append((title, plotly_filename, matplotlib_filename))
     return files
 
 
 def generate_optimization_history_plots(
-    studies: List[Study], base_dir: str
-) -> List[Tuple[Study, str, str]]:
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
@@ -92,17 +111,21 @@ def generate_optimization_history_plots(
     )
 
 
-def generate_contour_plots(studies: List[Study], base_dir: str) -> List[Tuple[Study, str, str]]:
+def generate_contour_plots(
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_contour,
-        matplotlib_visualization.plot_contour,
+        wrap_plot_func(plotly_visualization.plot_contour),
+        wrap_plot_func(matplotlib_visualization.plot_contour),
         filename_prefix="contour",
     )
 
 
-def generate_edf_plots(studies: List[Study], base_dir: str) -> List[Tuple[Study, str, str]]:
+def generate_edf_plots(
+    studies: Dict[str, Union[Study, StudiesType]], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
@@ -112,65 +135,71 @@ def generate_edf_plots(studies: List[Study], base_dir: str) -> List[Tuple[Study,
     )
 
 
-def generate_slice_plots(studies: List[Study], base_dir: str) -> List[Tuple[Study, str, str]]:
+def generate_slice_plots(
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_slice,
-        matplotlib_visualization.plot_slice,
+        wrap_plot_func(plotly_visualization.plot_slice),
+        wrap_plot_func(matplotlib_visualization.plot_slice),
         filename_prefix="slice",
     )
 
 
 def generate_param_importances_plots(
-    studies: List[Study], base_dir: str
-) -> List[Tuple[Study, str, str]]:
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     seed = 0
     return generate_plot_files(
         studies,
         base_dir,
-        lambda s: plotly_visualization.plot_param_importances(
-            s, evaluator=FanovaImportanceEvaluator(seed=seed)
+        wrap_plot_func(
+            lambda s: plotly_visualization.plot_param_importances(
+                s, evaluator=FanovaImportanceEvaluator(seed=seed)
+            )
         ),
-        lambda s: matplotlib_visualization.plot_param_importances(
-            s, evaluator=FanovaImportanceEvaluator(seed=seed)
+        wrap_plot_func(
+            lambda s: matplotlib_visualization.plot_param_importances(
+                s, evaluator=FanovaImportanceEvaluator(seed=seed)
+            )
         ),
         filename_prefix="importance",
     )
 
 
 def generate_parallel_coordinate_plots(
-    studies: List[Study], base_dir: str
-) -> List[Tuple[Study, str, str]]:
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_parallel_coordinate,
-        matplotlib_visualization.plot_parallel_coordinate,
+        wrap_plot_func(plotly_visualization.plot_parallel_coordinate),
+        wrap_plot_func(matplotlib_visualization.plot_parallel_coordinate),
         filename_prefix="parcoords",
     )
 
 
 def generate_intermediate_value_plots(
-    studies: List[Study], base_dir: str
-) -> List[Tuple[Study, str, str]]:
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_intermediate_values,
-        matplotlib_visualization.plot_intermediate_values,
+        wrap_plot_func(plotly_visualization.plot_intermediate_values),
+        wrap_plot_func(matplotlib_visualization.plot_intermediate_values),
         filename_prefix="intermediate",
     )
 
 
 def generate_pareto_front_plots(
-    studies: List[Study], base_dir: str
-) -> List[Tuple[Study, str, str]]:
+    studies: Dict[str, StudiesType], base_dir: str
+) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_pareto_front,
-        matplotlib_visualization.plot_pareto_front,
+        wrap_plot_func(plotly_visualization.plot_pareto_front),
+        wrap_plot_func(matplotlib_visualization.plot_pareto_front),
         filename_prefix="pareto-front",
     )
 
@@ -185,6 +214,10 @@ def main() -> None:
 
     print("Creating single objective studies")
     single_objective_studies = create_single_objective_studies()
+    single_objective_studies_with_multi_studies: Dict[str, StudiesType] = {
+        **single_objective_studies,
+        **create_multiple_single_objective_studies(),
+    }
     print("Creating multi objective studies")
     multi_objective_studies = create_multi_objective_studies()
     print("Creating studies that have intermediate values")
@@ -193,14 +226,15 @@ def main() -> None:
     if args.heavy:
         print("Creating pytorch study")
         pytorch_study = create_pytorch_study()
-        single_objective_studies.append(pytorch_study)
-        intermediate_value_studies.insert(0, pytorch_study)
+        assert pytorch_study is not None
+        single_objective_studies[pytorch_study.study_name] = pytorch_study
+        intermediate_value_studies[pytorch_study.study_name] = pytorch_study
 
     pages: List[Tuple[str, str]] = []
     for funcname, studies, generate in [
         (
             "plot_optimization_history",
-            single_objective_studies,
+            single_objective_studies_with_multi_studies,
             generate_optimization_history_plots,
         ),
         ("plot_slice", single_objective_studies, generate_slice_plots),
@@ -213,7 +247,11 @@ def main() -> None:
         ),
         ("plot_pareto_front", multi_objective_studies, generate_pareto_front_plots),
         ("plot_param_importances", single_objective_studies, generate_param_importances_plots),
-        ("plot_edf", single_objective_studies, generate_edf_plots),
+        (
+            "plot_edf",
+            single_objective_studies_with_multi_studies,
+            generate_edf_plots,
+        ),
     ]:
         plot_files = generate(studies, abs_output_dir)
 

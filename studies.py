@@ -1,13 +1,34 @@
 import os
+from typing import Dict
 from typing import List
+from typing import Optional
+from typing import Sequence
 from typing import Tuple
+from typing import Union
 
 import optuna
 from optuna import Study
 
 
-def create_single_objective_studies() -> List[Study]:
-    studies = []
+StudiesType = Union[Study, Sequence[Study]]
+
+
+def objective_single(trial: optuna.Trial) -> float:
+    x1 = trial.suggest_float("x1", 0, 10)
+    x2 = trial.suggest_float("x2", 0, 10)
+    return (x1 - 2) ** 2 + (x2 - 5) ** 2
+
+
+def objective_single_dynamic(trial: optuna.Trial) -> float:
+    category = trial.suggest_categorical("category", ["foo", "bar"])
+    if category == "foo":
+        return (trial.suggest_float("x1", 0, 10) - 2) ** 2
+    else:
+        return -((trial.suggest_float("x2", -10, 0) + 5) ** 2)
+
+
+def create_single_objective_studies() -> Dict[str, StudiesType]:
+    studies: Dict[str, StudiesType] = {}
     storage = optuna.storages.InMemoryStorage()
 
     # Single-objective study
@@ -16,13 +37,8 @@ def create_single_objective_studies() -> List[Study]:
         storage=storage,
     )
 
-    def objective_single(trial: optuna.Trial) -> float:
-        x1 = trial.suggest_float("x1", 0, 10)
-        x2 = trial.suggest_float("x2", 0, 10)
-        return (x1 - 2) ** 2 + (x2 - 5) ** 2
-
     study.optimize(objective_single, n_trials=50)
-    studies.append(study)
+    studies[study.study_name] = study
 
     # Single-objective study with dynamic search space
     study = optuna.create_study(
@@ -31,23 +47,48 @@ def create_single_objective_studies() -> List[Study]:
         direction="maximize",
     )
 
-    def objective_single_dynamic(trial: optuna.Trial) -> float:
-        category = trial.suggest_categorical("category", ["foo", "bar"])
-        if category == "foo":
-            return (trial.suggest_float("x1", 0, 10) - 2) ** 2
-        else:
-            return -((trial.suggest_float("x2", -10, 0) + 5) ** 2)
-
     study.optimize(objective_single_dynamic, n_trials=50)
-    studies.append(study)
+    studies[study.study_name] = study
 
     # No trials single-objective study
     optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
     return studies
 
 
-def create_multi_objective_studies() -> List[Study]:
-    studies = []
+def create_multiple_single_objective_studies() -> Dict[str, StudiesType]:
+    studies: Dict[str, StudiesType] = {}
+    storage = optuna.storages.InMemoryStorage()
+
+    # Single-objective study
+    _static: List[Study] = []
+    for i in range(2):
+        study = optuna.create_study(
+            study_name=f"static{i}",
+            storage=storage,
+        )
+        study.optimize(objective_single, n_trials=50)
+        _static.append(study)
+    title = "Two single objective studies with 2-dimensional static search space"
+    studies[title] = _static
+
+    # Single-objective study with dynamic search space
+    _dynamic: List[Study] = []
+    for i in range(2):
+        study = optuna.create_study(
+            study_name=f"dynamic{i}",
+            storage=storage,
+            direction="maximize",
+        )
+        study.optimize(objective_single_dynamic, n_trials=50)
+        _dynamic.append(study)
+    title = "Two single objective studies with 3-dimensional dynamic search space"
+    studies[title] = _dynamic
+
+    return studies
+
+
+def create_multi_objective_studies() -> Dict[str, StudiesType]:
+    studies: Dict[str, StudiesType] = {}
     storage = optuna.storages.InMemoryStorage()
 
     # Multi-objective study
@@ -64,7 +105,7 @@ def create_multi_objective_studies() -> List[Study]:
         directions=["minimize", "minimize"],
     )
     study.optimize(objective_multi, n_trials=50)
-    studies.append(study)
+    studies[study.study_name] = study
 
     # Multi-objective study with dynamic search space
     study = optuna.create_study(
@@ -89,13 +130,13 @@ def create_multi_objective_studies() -> List[Study]:
             return v0, v1
 
     study.optimize(objective_multi_dynamic, n_trials=50)
-    studies.append(study)
+    studies[study.study_name] = study
 
     return studies
 
 
-def create_intermediate_value_studies() -> List[Study]:
-    studies = []
+def create_intermediate_value_studies() -> Dict[str, StudiesType]:
+    studies: Dict[str, StudiesType] = {}
     storage = optuna.storages.InMemoryStorage()
 
     def objective_simple(trial: optuna.Trial, report_intermediate_values: bool) -> float:
@@ -123,31 +164,31 @@ def create_intermediate_value_studies() -> List[Study]:
 
     study = optuna.create_study(study_name="Study with 1 trial", storage=storage)
     study.optimize(lambda t: objective_simple(t, True), n_trials=1)
-    studies.append(study)
+    studies[study.study_name] = study
 
     study = optuna.create_study(
         study_name="Study that is pruned after 'inf', '-inf', or 'nan'", storage=storage
     )
     study.optimize(objective_single_inf_report, n_trials=50)
-    studies.append(study)
+    studies[study.study_name] = study
 
     study = optuna.create_study(
         study_name="Study with only 1 trial that has no intermediate value",
         storage=storage,
     )
     study.optimize(lambda t: objective_simple(t, False), n_trials=1)
-    studies.append(study)
+    studies[study.study_name] = study
 
     study = optuna.create_study(study_name="Study that has only failed trials", storage=storage)
     study.optimize(fail_objective, n_trials=1, catch=(ValueError,))
-    studies.append(study)
+    studies[study.study_name] = study
 
     study = optuna.create_study(study_name="Study that has no trials", storage=storage)
-    studies.append(study)
+    studies[study.study_name] = study
     return studies
 
 
-def create_pytorch_study() -> Study:
+def create_pytorch_study() -> Optional[Study]:
     try:
         import torch
         import torch.nn as nn
@@ -158,7 +199,7 @@ def create_pytorch_study() -> Study:
         from torchvision import transforms
     except ImportError:
         print("create_pytorch_studies is skipped because torch/torchvision is not found")
-        return []
+        return None
 
     DEVICE = torch.device("cpu")
     BATCHSIZE = 128
