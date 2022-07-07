@@ -2,12 +2,10 @@ import argparse
 import functools
 import os
 from typing import Callable
-from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import TypeVar
-from typing import Union
 import warnings
 
 from jinja2 import Environment
@@ -66,14 +64,14 @@ def wrap_plot_func(
 
 
 def generate_plot_files(
-    studies: Dict[str, StudiesType],
+    studies: List[Tuple[str, StudiesType]],
     base_dir: str,
     plotly_plot: Callable[[StudiesType], "go.Figure"],
     matplotlib_plot: Callable[[StudiesType], "Axes"],
     filename_prefix: str,
 ) -> List[Tuple[str, str, str]]:
     files = []
-    for title, study in studies.items():
+    for title, study in studies:
         plotly_filename = f"{filename_prefix}-{title}-plotly.png"
         plotly_filepath = os.path.join(base_dir, plotly_filename)
         matplotlib_filename = f"{filename_prefix}-{title}-matplotlib.png"
@@ -100,7 +98,7 @@ def generate_plot_files(
 
 
 def generate_optimization_history_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -112,7 +110,7 @@ def generate_optimization_history_plots(
 
 
 def generate_contour_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -124,7 +122,7 @@ def generate_contour_plots(
 
 
 def generate_edf_plots(
-    studies: Dict[str, Union[Study, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -136,7 +134,7 @@ def generate_edf_plots(
 
 
 def generate_slice_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -148,7 +146,7 @@ def generate_slice_plots(
 
 
 def generate_param_importances_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     seed = 0
     return generate_plot_files(
@@ -169,7 +167,7 @@ def generate_param_importances_plots(
 
 
 def generate_parallel_coordinate_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -181,7 +179,7 @@ def generate_parallel_coordinate_plots(
 
 
 def generate_intermediate_value_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -193,7 +191,7 @@ def generate_intermediate_value_plots(
 
 
 def generate_pareto_front_plots(
-    studies: Dict[str, StudiesType], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str
 ) -> List[Tuple[str, str, str]]:
     return generate_plot_files(
         studies,
@@ -214,10 +212,7 @@ def main() -> None:
 
     print("Creating single objective studies")
     single_objective_studies = create_single_objective_studies()
-    single_objective_studies_with_multi_studies: Dict[str, StudiesType] = {
-        **single_objective_studies,
-        **create_multiple_single_objective_studies(),
-    }
+    multiple_single_objective_studies = create_multiple_single_objective_studies()
     print("Creating multi objective studies")
     multi_objective_studies = create_multi_objective_studies()
     print("Creating studies that have intermediate values")
@@ -227,8 +222,13 @@ def main() -> None:
         print("Creating pytorch study")
         pytorch_study = create_pytorch_study()
         assert pytorch_study is not None
-        single_objective_studies[pytorch_study.study_name] = pytorch_study
-        intermediate_value_studies[pytorch_study.study_name] = pytorch_study
+        single_objective_studies.append((pytorch_study.study_name, pytorch_study))
+        intermediate_value_studies.insert(0, (pytorch_study.study_name, pytorch_study))
+
+    single_objective_studies_with_multi_studies: List[Tuple[str, StudiesType]] = [
+        *single_objective_studies,
+        *multiple_single_objective_studies,
+    ]
 
     pages: List[Tuple[str, str]] = []
     for funcname, studies, generate in [

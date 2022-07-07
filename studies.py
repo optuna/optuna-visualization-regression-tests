@@ -1,5 +1,4 @@
 import os
-from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Sequence
@@ -27,8 +26,8 @@ def objective_single_dynamic(trial: optuna.Trial) -> float:
         return -((trial.suggest_float("x2", -10, 0) + 5) ** 2)
 
 
-def create_single_objective_studies() -> Dict[str, StudiesType]:
-    studies: Dict[str, StudiesType] = {}
+def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
     storage = optuna.storages.InMemoryStorage()
 
     # Single-objective study
@@ -38,7 +37,7 @@ def create_single_objective_studies() -> Dict[str, StudiesType]:
     )
 
     study.optimize(objective_single, n_trials=50)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     # Single-objective study with dynamic search space
     study = optuna.create_study(
@@ -48,15 +47,15 @@ def create_single_objective_studies() -> Dict[str, StudiesType]:
     )
 
     study.optimize(objective_single_dynamic, n_trials=50)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     # No trials single-objective study
     optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
     return studies
 
 
-def create_multiple_single_objective_studies() -> Dict[str, StudiesType]:
-    studies: Dict[str, StudiesType] = {}
+def create_multiple_single_objective_studies() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
     storage = optuna.storages.InMemoryStorage()
 
     # Single-objective study
@@ -69,7 +68,7 @@ def create_multiple_single_objective_studies() -> Dict[str, StudiesType]:
         study.optimize(objective_single, n_trials=50)
         _static.append(study)
     title = "Two single objective studies with 2-dimensional static search space"
-    studies[title] = _static
+    studies.append((title, _static))
 
     # Single-objective study with dynamic search space
     _dynamic: List[Study] = []
@@ -82,13 +81,13 @@ def create_multiple_single_objective_studies() -> Dict[str, StudiesType]:
         study.optimize(objective_single_dynamic, n_trials=50)
         _dynamic.append(study)
     title = "Two single objective studies with 3-dimensional dynamic search space"
-    studies[title] = _dynamic
+    studies.append((title, _dynamic))
 
     return studies
 
 
-def create_multi_objective_studies() -> Dict[str, StudiesType]:
-    studies: Dict[str, StudiesType] = {}
+def create_multi_objective_studies() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
     storage = optuna.storages.InMemoryStorage()
 
     # Multi-objective study
@@ -105,7 +104,7 @@ def create_multi_objective_studies() -> Dict[str, StudiesType]:
         directions=["minimize", "minimize"],
     )
     study.optimize(objective_multi, n_trials=50)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     # Multi-objective study with dynamic search space
     study = optuna.create_study(
@@ -130,13 +129,13 @@ def create_multi_objective_studies() -> Dict[str, StudiesType]:
             return v0, v1
 
     study.optimize(objective_multi_dynamic, n_trials=50)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     return studies
 
 
-def create_intermediate_value_studies() -> Dict[str, StudiesType]:
-    studies: Dict[str, StudiesType] = {}
+def create_intermediate_value_studies() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
     storage = optuna.storages.InMemoryStorage()
 
     def objective_simple(trial: optuna.Trial, report_intermediate_values: bool) -> float:
@@ -164,27 +163,27 @@ def create_intermediate_value_studies() -> Dict[str, StudiesType]:
 
     study = optuna.create_study(study_name="Study with 1 trial", storage=storage)
     study.optimize(lambda t: objective_simple(t, True), n_trials=1)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     study = optuna.create_study(
         study_name="Study that is pruned after 'inf', '-inf', or 'nan'", storage=storage
     )
     study.optimize(objective_single_inf_report, n_trials=50)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     study = optuna.create_study(
         study_name="Study with only 1 trial that has no intermediate value",
         storage=storage,
     )
     study.optimize(lambda t: objective_simple(t, False), n_trials=1)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     study = optuna.create_study(study_name="Study that has only failed trials", storage=storage)
     study.optimize(fail_objective, n_trials=1, catch=(ValueError,))
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
 
     study = optuna.create_study(study_name="Study that has no trials", storage=storage)
-    studies[study.study_name] = study
+    studies.append((study.study_name, study))
     return studies
 
 
