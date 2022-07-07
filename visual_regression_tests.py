@@ -112,7 +112,7 @@ def generate_optimization_history_plots(
     plot_kwargs: Dict[str, Any],
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "history"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
