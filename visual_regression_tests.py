@@ -127,7 +127,7 @@ def generate_contour_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "contour"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -142,7 +142,7 @@ def generate_edf_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "edf"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -157,7 +157,7 @@ def generate_slice_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "slice"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -173,7 +173,7 @@ def generate_param_importances_plots(
 ) -> List[Tuple[str, str, str]]:
     seed = 0
     filename_prefix = "importance"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -196,7 +196,7 @@ def generate_parallel_coordinate_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "parcoords"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -213,7 +213,7 @@ def generate_intermediate_value_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "intermediate"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
@@ -230,7 +230,7 @@ def generate_pareto_front_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     filename_prefix = "pareto-front"
-    if len(plot_kwargs) == 0:
+    if len(plot_kwargs) > 0:
         filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
