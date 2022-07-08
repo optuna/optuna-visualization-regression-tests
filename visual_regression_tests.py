@@ -1,7 +1,9 @@
 import argparse
 import functools
 import os
+from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import TYPE_CHECKING
@@ -63,6 +65,13 @@ def wrap_plot_func(
     return wrapper
 
 
+def stringify_plot_kwargs(plot_kwargs: Dict[str, Any]) -> str:
+    items = []
+    for key, value in plot_kwargs.items():
+        items.append(f"{key}={value}")
+    return ",".join(items)
+
+
 def generate_plot_files(
     studies: List[Tuple[str, StudiesType]],
     base_dir: str,
@@ -98,107 +107,137 @@ def generate_plot_files(
 
 
 def generate_optimization_history_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]],
+    base_dir: str,
+    plot_kwargs: Dict[str, Any],
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "history"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_optimization_history,
-        matplotlib_visualization.plot_optimization_history,
-        filename_prefix="history",
+        lambda s: plotly_visualization.plot_optimization_history(s, **plot_kwargs),
+        lambda s: matplotlib_visualization.plot_optimization_history(s, **plot_kwargs),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_contour_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "contour"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        wrap_plot_func(plotly_visualization.plot_contour),
-        wrap_plot_func(matplotlib_visualization.plot_contour),
-        filename_prefix="contour",
+        wrap_plot_func(lambda s: plotly_visualization.plot_contour(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_contour(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_edf_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "edf"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        plotly_visualization.plot_edf,
-        matplotlib_visualization.plot_edf,
-        filename_prefix="edf",
+        lambda s: plotly_visualization.plot_edf(s, **plot_kwargs),
+        lambda s: matplotlib_visualization.plot_edf(s, **plot_kwargs),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_slice_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "slice"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        wrap_plot_func(plotly_visualization.plot_slice),
-        wrap_plot_func(matplotlib_visualization.plot_slice),
-        filename_prefix="slice",
+        wrap_plot_func(lambda s: plotly_visualization.plot_slice(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_slice(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_param_importances_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
     seed = 0
+    filename_prefix = "importance"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
         wrap_plot_func(
             lambda s: plotly_visualization.plot_param_importances(
-                s, evaluator=FanovaImportanceEvaluator(seed=seed)
+                s, evaluator=FanovaImportanceEvaluator(seed=seed), **plot_kwargs
             )
         ),
         wrap_plot_func(
             lambda s: matplotlib_visualization.plot_param_importances(
-                s, evaluator=FanovaImportanceEvaluator(seed=seed)
+                s, evaluator=FanovaImportanceEvaluator(seed=seed), **plot_kwargs
             )
         ),
-        filename_prefix="importance",
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_parallel_coordinate_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "parcoords"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        wrap_plot_func(plotly_visualization.plot_parallel_coordinate),
-        wrap_plot_func(matplotlib_visualization.plot_parallel_coordinate),
-        filename_prefix="parcoords",
+        wrap_plot_func(lambda s: plotly_visualization.plot_parallel_coordinate(s, **plot_kwargs)),
+        wrap_plot_func(
+            lambda s: matplotlib_visualization.plot_parallel_coordinate(s, **plot_kwargs)
+        ),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_intermediate_value_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "intermediate"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        wrap_plot_func(plotly_visualization.plot_intermediate_values),
-        wrap_plot_func(matplotlib_visualization.plot_intermediate_values),
-        filename_prefix="intermediate",
+        wrap_plot_func(lambda s: plotly_visualization.plot_intermediate_values(s, **plot_kwargs)),
+        wrap_plot_func(
+            lambda s: matplotlib_visualization.plot_intermediate_values(s, **plot_kwargs)
+        ),
+        filename_prefix=filename_prefix,
     )
 
 
 def generate_pareto_front_plots(
-    studies: List[Tuple[str, StudiesType]], base_dir: str
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
+    filename_prefix = "pareto-front"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
     return generate_plot_files(
         studies,
         base_dir,
-        wrap_plot_func(plotly_visualization.plot_pareto_front),
-        wrap_plot_func(matplotlib_visualization.plot_pareto_front),
-        filename_prefix="pareto-front",
+        wrap_plot_func(lambda s: plotly_visualization.plot_pareto_front(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_pareto_front(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
     )
 
 
@@ -231,34 +270,60 @@ def main() -> None:
     ]
 
     pages: List[Tuple[str, str]] = []
-    for funcname, studies, generate in [
+    for funcname, studies, generate, plot_kwargs in [
         (
             "plot_optimization_history",
             single_objective_studies_with_multi_studies,
             generate_optimization_history_plots,
+            {},
         ),
-        ("plot_slice", single_objective_studies, generate_slice_plots),
-        ("plot_contour", single_objective_studies, generate_contour_plots),
-        ("plot_parallel_coordinate", single_objective_studies, generate_parallel_coordinate_plots),
+        (
+            "plot_optimization_history",
+            multiple_single_objective_studies,
+            generate_optimization_history_plots,
+            {"error_bar": True},
+        ),
+        ("plot_slice", single_objective_studies, generate_slice_plots, {}),
+        ("plot_contour", single_objective_studies, generate_contour_plots, {}),
+        (
+            "plot_parallel_coordinate",
+            single_objective_studies,
+            generate_parallel_coordinate_plots,
+            {},
+        ),
         (
             "plot_intermediate_values",
             intermediate_value_studies,
             generate_intermediate_value_plots,
+            {},
         ),
-        ("plot_pareto_front", multi_objective_studies, generate_pareto_front_plots),
-        ("plot_param_importances", single_objective_studies, generate_param_importances_plots),
+        ("plot_pareto_front", multi_objective_studies, generate_pareto_front_plots, {}),
+        ("plot_param_importances", single_objective_studies, generate_param_importances_plots, {}),
         (
             "plot_edf",
             single_objective_studies_with_multi_studies,
             generate_edf_plots,
+            {},
         ),
     ]:
-        plot_files = generate(studies, abs_output_dir)
+        assert isinstance(plot_kwargs, Dict)
+        plot_files = generate(studies, abs_output_dir, plot_kwargs)
 
-        with open(os.path.join(abs_output_dir, f"{funcname}.html"), "w") as f:
-            f.write(plot_results_template.render(funcname=f"{funcname}()", plot_files=plot_files))
+        plot_kwargs_str = stringify_plot_kwargs(plot_kwargs)
+        filename = (
+            f"{funcname}.html"
+            if len(plot_kwargs_str) == 0
+            else f"{funcname}-{plot_kwargs_str}.html"
+        )
 
-        pages.append((f"{funcname}()", f"{funcname}.html"))
+        with open(os.path.join(abs_output_dir, filename), "w") as f:
+            f.write(
+                plot_results_template.render(
+                    funcname=f"{funcname}({plot_kwargs_str})", plot_files=plot_files
+                )
+            )
+
+        pages.append((f"{funcname}({plot_kwargs_str})", filename))
 
     with open(os.path.join(abs_output_dir, "index.html"), "w") as f:
         f.write(list_pages_template.render(pages=pages))
