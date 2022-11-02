@@ -47,7 +47,7 @@ def create_single_objective_studies() -> List[Study]:
         storage=storage,
     )
 
-    def objective_single_none_categorical(trial):
+    def objective_single_none_categorical(trial: optuna.Trial) -> float:
         x = trial.suggest_float("x", -100, 100)
         trial.suggest_categorical("y", ["foo", None])
         return x**2
