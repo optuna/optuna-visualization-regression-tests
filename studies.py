@@ -61,7 +61,7 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
         return x**2
 
     study.optimize(objective_single_none_categorical, n_trials=10)
-    studies.append(study)
+    studies.append((study.study_name, study))
 
     # No trials single-objective study
     optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
