@@ -1,4 +1,5 @@
 import os
+import time
 from typing import List
 from typing import Optional
 from typing import Sequence
@@ -58,7 +59,7 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
     def objective_single_none_categorical(trial: optuna.Trial) -> float:
         x = trial.suggest_float("x", -100, 100)
         trial.suggest_categorical("y", ["foo", None])
-        return x**2
+        return x ** 2
 
     study.optimize(objective_single_none_categorical, n_trials=10)
     studies.append((study.study_name, study))
@@ -108,7 +109,7 @@ def create_multi_objective_studies() -> List[Tuple[str, StudiesType]]:
     def objective_multi(trial: optuna.Trial) -> Tuple[float, float]:
         x = trial.suggest_float("x", 0, 5)
         y = trial.suggest_float("y", 0, 3)
-        v0 = 4 * x**2 + 4 * y**2
+        v0 = 4 * x ** 2 + 4 * y ** 2
         v1 = (x - 5) ** 2 + (y - 5) ** 2
         return v0, v1
 
@@ -132,13 +133,13 @@ def create_multi_objective_studies() -> List[Tuple[str, StudiesType]]:
         if category == "foo":
             x = trial.suggest_float("x1", 0, 5)
             y = trial.suggest_float("y1", 0, 3)
-            v0 = 4 * x**2 + 4 * y**2
+            v0 = 4 * x ** 2 + 4 * y ** 2
             v1 = (x - 5) ** 2 + (y - 5) ** 2
             return v0, v1
         else:
             x = trial.suggest_float("x2", 0, 5)
             y = trial.suggest_float("y2", 0, 3)
-            v0 = 2 * x**2 + 2 * y**2
+            v0 = 2 * x ** 2 + 2 * y ** 2
             v1 = (x - 2) ** 2 + (y - 3) ** 2
             return v0, v1
 
@@ -170,7 +171,7 @@ def create_intermediate_value_studies() -> List[Tuple[str, StudiesType]]:
         if x > 0:
             raise optuna.TrialPruned()
         else:
-            return x**2
+            return x ** 2
 
     def fail_objective(_: optuna.Trial) -> float:
         raise ValueError
@@ -316,3 +317,47 @@ def create_pytorch_study() -> Optional[Study]:
     )
     study.optimize(objective, n_trials=50, timeout=600)
     return study
+
+
+def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
+    storage = optuna.storages.InMemoryStorage()
+
+    def objective_timeline(trial: optuna.Trial) -> float:
+        x = trial.suggest_float("x", 0, 1)
+        time.sleep(x * 0.1)
+        if x > 0.8:
+            raise ValueError()
+        if x > 0.4:
+            raise optuna.TrialPruned()
+        return x ** 2
+
+    # Single-objective study
+    study = optuna.create_study(
+        study_name="A single objective study consuming time",
+        storage=storage,
+    )
+
+    study.enqueue_trial({"x": 0.3})
+    study.enqueue_trial({"x": 0.9})
+    study.enqueue_trial({"x": 0.5})
+    study.optimize(objective_timeline, n_trials=50, n_jobs=2, catch=(ValueError,))
+    studies.append((study.study_name, study))
+
+    # Single-objective study
+    study = optuna.create_study(
+        study_name=(
+            "A single objective study consuming time and "
+            "the order of legends is different from the order of trials"
+        ),
+        storage=storage,
+    )
+    study.enqueue_trial({"x": 0.9})
+    study.enqueue_trial({"x": 0.5})
+    study.enqueue_trial({"x": 0.3})
+    study.optimize(objective_timeline, n_trials=50, n_jobs=2, catch=(ValueError,))
+    studies.append((study.study_name, study))
+
+    # No trials single-objective study
+    optuna.create_study(study_name="A single objective study that has no trials", storage=storage)
+    return studies
