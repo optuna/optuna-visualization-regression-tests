@@ -24,6 +24,7 @@ from studies import create_multi_objective_studies
 from studies import create_multiple_single_objective_studies
 from studies import create_pytorch_study
 from studies import create_single_objective_studies
+from studies import create_single_objective_studies_for_timeline
 from studies import StudiesType
 
 
@@ -241,6 +242,21 @@ def generate_pareto_front_plots(
     )
 
 
+def generate_timeline_plots(
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
+) -> List[Tuple[str, str, str]]:
+    filename_prefix = "timeline"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
+    return generate_plot_files(
+        studies,
+        base_dir,
+        wrap_plot_func(lambda s: plotly_visualization.plot_timeline(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_timeline(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
+    )
+
+
 def main() -> None:
     if not os.path.exists(abs_output_dir):
         os.mkdir(abs_output_dir)
@@ -256,6 +272,7 @@ def main() -> None:
     multi_objective_studies = create_multi_objective_studies()
     print("Creating studies that have intermediate values")
     intermediate_value_studies = create_intermediate_value_studies()
+    single_objective_studies_for_timeline = create_single_objective_studies_for_timeline()
 
     if args.heavy:
         print("Creating pytorch study")
@@ -305,6 +322,7 @@ def main() -> None:
             generate_edf_plots,
             {},
         ),
+        ("plot_timeline", single_objective_studies_for_timeline, generate_timeline_plots, {}),
     ]:
         assert isinstance(plot_kwargs, Dict)
         plot_files = generate(studies, abs_output_dir, plot_kwargs)
