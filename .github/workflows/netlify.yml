@@ -33,8 +33,7 @@ jobs:
       run: |
         pip install -U pip
         pip install --progress-bar off .
-        git clone https://github.com/optuna/optuna.git
-        pip install optuna/
+        pip install git+https://github.com/optuna/optuna.git
     - name: Install Optuna visual regression
       run: |
         pip install -r requirements.txt
