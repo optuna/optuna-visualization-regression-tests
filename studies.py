@@ -359,8 +359,7 @@ def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesTyp
 
     # No trials single-objective study
     study = optuna.create_study(
-        study_name="A single objective study that has no trials",
-        storage=storage
+        study_name="A single objective study that has no trials", storage=storage
     )
     studies.append((study.study_name, study))
     return studies
