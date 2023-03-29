@@ -59,7 +59,7 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
     def objective_single_none_categorical(trial: optuna.Trial) -> float:
         x = trial.suggest_float("x", -100, 100)
         trial.suggest_categorical("y", ["foo", None])
-        return x ** 2
+        return x**2
 
     study.optimize(objective_single_none_categorical, n_trials=10)
     studies.append((study.study_name, study))
@@ -109,7 +109,7 @@ def create_multi_objective_studies() -> List[Tuple[str, StudiesType]]:
     def objective_multi(trial: optuna.Trial) -> Tuple[float, float]:
         x = trial.suggest_float("x", 0, 5)
         y = trial.suggest_float("y", 0, 3)
-        v0 = 4 * x ** 2 + 4 * y ** 2
+        v0 = 4 * x**2 + 4 * y**2
         v1 = (x - 5) ** 2 + (y - 5) ** 2
         return v0, v1
 
@@ -133,13 +133,13 @@ def create_multi_objective_studies() -> List[Tuple[str, StudiesType]]:
         if category == "foo":
             x = trial.suggest_float("x1", 0, 5)
             y = trial.suggest_float("y1", 0, 3)
-            v0 = 4 * x ** 2 + 4 * y ** 2
+            v0 = 4 * x**2 + 4 * y**2
             v1 = (x - 5) ** 2 + (y - 5) ** 2
             return v0, v1
         else:
             x = trial.suggest_float("x2", 0, 5)
             y = trial.suggest_float("y2", 0, 3)
-            v0 = 2 * x ** 2 + 2 * y ** 2
+            v0 = 2 * x**2 + 2 * y**2
             v1 = (x - 2) ** 2 + (y - 3) ** 2
             return v0, v1
 
@@ -171,7 +171,7 @@ def create_intermediate_value_studies() -> List[Tuple[str, StudiesType]]:
         if x > 0:
             raise optuna.TrialPruned()
         else:
-            return x ** 2
+            return x**2
 
     def fail_objective(_: optuna.Trial) -> float:
         raise ValueError
@@ -258,7 +258,6 @@ def create_pytorch_study() -> Optional[Study]:
         return train_loader, valid_loader
 
     def objective(trial: optuna.Trial) -> float:
-
         # Generate the model.
         model = define_model(trial).to(DEVICE)
 
@@ -330,7 +329,7 @@ def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesTyp
             raise ValueError()
         if x > 0.4:
             raise optuna.TrialPruned()
-        return x ** 2
+        return x**2
 
     # Single-objective study
     study = optuna.create_study(
