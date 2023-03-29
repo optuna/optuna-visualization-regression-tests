@@ -24,6 +24,8 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
 
     - uses: actions/setup-python@v4
       with:
@@ -32,7 +34,6 @@ jobs:
     - name: Install Optuna
       run: |
         pip install -U pip
-        pip install --progress-bar off .
         pip install git+https://github.com/optuna/optuna.git
     - name: Install Optuna visual regression
       run: |
