@@ -351,9 +351,9 @@ def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesTyp
         ),
         storage=storage,
     )
-    study.enqueue_trial({"x": 0.9})
-    study.enqueue_trial({"x": 0.5})
-    study.enqueue_trial({"x": 0.3})
+    study.enqueue_trial({"x": 0.9})  # Add a FAIL trial.
+    study.enqueue_trial({"x": 0.5})  # Add a PRUNED trial.
+    study.enqueue_trial({"x": 0.3})  # Add a COMPLETE trial.
     study.optimize(objective_timeline, n_trials=50, n_jobs=2, catch=(ValueError,))
     studies.append((study.study_name, study))
 
