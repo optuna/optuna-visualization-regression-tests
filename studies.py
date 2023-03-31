@@ -1,4 +1,5 @@
 import os
+import time
 from typing import List
 from typing import Optional
 from typing import Sequence
@@ -257,7 +258,6 @@ def create_pytorch_study() -> Optional[Study]:
         return train_loader, valid_loader
 
     def objective(trial: optuna.Trial) -> float:
-
         # Generate the model.
         model = define_model(trial).to(DEVICE)
 
@@ -316,3 +316,50 @@ def create_pytorch_study() -> Optional[Study]:
     )
     study.optimize(objective, n_trials=50, timeout=600)
     return study
+
+
+def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesType]]:
+    studies: List[Tuple[str, StudiesType]] = []
+    storage = optuna.storages.InMemoryStorage()
+
+    def objective_timeline(trial: optuna.Trial) -> float:
+        x = trial.suggest_float("x", 0, 1)
+        time.sleep(x * 0.1)
+        if x > 0.8:
+            raise ValueError()
+        if x > 0.4:
+            raise optuna.TrialPruned()
+        return x**2
+
+    # Single-objective study
+    study = optuna.create_study(
+        study_name="A single objective study consuming time",
+        storage=storage,
+    )
+
+    study.enqueue_trial({"x": 0.3})  # Add a COMPLETE trial.
+    study.enqueue_trial({"x": 0.9})  # Add a FAIL trial.
+    study.enqueue_trial({"x": 0.5})  # Add a PRUNED trial.
+    study.optimize(objective_timeline, n_trials=50, n_jobs=2, catch=(ValueError,))
+    studies.append((study.study_name, study))
+
+    # Single-objective study
+    study = optuna.create_study(
+        study_name=(
+            "A single objective study consuming time and "
+            "the order of legends is different from the order of trials"
+        ),
+        storage=storage,
+    )
+    study.enqueue_trial({"x": 0.9})  # Add a FAIL trial.
+    study.enqueue_trial({"x": 0.5})  # Add a PRUNED trial.
+    study.enqueue_trial({"x": 0.3})  # Add a COMPLETE trial.
+    study.optimize(objective_timeline, n_trials=50, n_jobs=2, catch=(ValueError,))
+    studies.append((study.study_name, study))
+
+    # No trials single-objective study
+    study = optuna.create_study(
+        study_name="A single objective study that has no trials", storage=storage
+    )
+    studies.append((study.study_name, study))
+    return studies
