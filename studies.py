@@ -318,6 +318,61 @@ def create_pytorch_study() -> Optional[Study]:
     return study
 
 
+def create_terminator_studies() -> List[Tuple[str, StudiesType]]:
+    studies: list[tuple[str, StudiesType]] = []
+    storage = optuna.storages.InMemoryStorage()
+
+    def objective_terminator_simple(trial):
+        x = trial.suggest_float("x", -100, 100)
+        y = trial.suggest_categorical("y", [-1, 0, 1])
+        return x ** 2 + y
+
+    study = optuna.create_study(
+        study_name="Terminator Simple",
+        sampler=optuna.samplers.TPESampler(seed=10),
+        storage=storage,
+    )
+    study.optimize(objective_terminator_simple, n_trials=10)
+    studies.append((study.study_name, study))
+    return studies
+
+
+def create_terminator_studies_with_validation_score() -> List[Tuple[str, StudiesType]]:
+    from sklearn.model_selection import cross_val_score
+    from sklearn.datasets import load_wine
+    from sklearn.model_selection import KFold
+    from lightgbm import LGBMClassifier
+    from optuna.terminator.erroreval import report_cross_validation_scores
+
+    studies: list[tuple[str, StudiesType]] = []
+    storage = optuna.storages.InMemoryStorage()
+
+    def objective_lightgbm(trial):
+        X, y = load_wine(return_X_y=True)
+
+        clf = LGBMClassifier(
+            reg_alpha=trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
+            reg_lambda=trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
+            num_leaves=trial.suggest_int("num_leaves", 2, 256),
+            colsample_bytree=trial.suggest_float("colsample_bytree", 0.4, 1.0),
+            subsample=trial.suggest_float("subsample", 0.4, 1.0),
+            subsample_freq=trial.suggest_int("subsample_freq", 1, 7),
+            min_child_samples=trial.suggest_int("min_child_samples", 5, 100),
+        )
+
+        scores = cross_val_score(clf, X, y, cv=KFold(n_splits=5, shuffle=True))
+        report_cross_validation_scores(trial, scores)
+        return scores.mean()
+
+    study = optuna.create_study(
+        study_name="Terminator LightGBM",
+        storage=storage,
+    )
+    study.optimize(objective_lightgbm, n_trials=50, timeout=600)
+    studies.append((study.study_name, study))
+    return studies
+
+
 def create_single_objective_studies_for_timeline() -> List[Tuple[str, StudiesType]]:
     studies: List[Tuple[str, StudiesType]] = []
     storage = optuna.storages.InMemoryStorage()
