@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Optuna Visual Regression Tests</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            padding: 100px;
+        }
+        .wrapper {
+            padding: 64px;
+            background-color: rgb(255, 255, 255);
+            box-shadow: rgba(0, 0, 0, 0.08) 0 8px 24px;
+            margin: 0px auto;
+            border-radius: 8px;
+        }
+        .plot-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .plot {
+            width: 50%;
+            object-fit: contain;
+        }
+        .error-message {
+            font-weight: bold;
+            margin: 0 auto;
+            font-size: x-large;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>plot_param_importances()</h1>
+    
+    <h2>A single objective study with 2-dimensional static search space</h2>
+    <div class="plot-wrapper">
+        
+        <img class="plot" src="importance-A single objective study with 2-dimensional static search space-plotly.png">
+        
+        
+        <img class="plot" src="importance-A single objective study with 2-dimensional static search space-matplotlib.png">
+        
+    </div>
+    
+    <h2>A single-objective study with 3-dimensional dynamic search space</h2>
+    <div class="plot-wrapper">
+        
+        <img class="plot" src="importance-A single-objective study with 3-dimensional dynamic search space-plotly.png">
+        
+        
+        <img class="plot" src="importance-A single-objective study with 3-dimensional dynamic search space-matplotlib.png">
+        
+    </div>
+    
+    <h2>A single objective study that suggests None as a categorical parameter</h2>
+    <div class="plot-wrapper">
+        
+        <img class="plot" src="importance-A single objective study that suggests None as a categorical parameter-plotly.png">
+        
+        
+        <img class="plot" src="importance-A single objective study that suggests None as a categorical parameter-matplotlib.png">
+        
+    </div>
+    
+    <h2>pytorch_simple.py in optuna-example</h2>
+    <div class="plot-wrapper">
+        
+        <img class="plot" src="importance-pytorch_simple.py in optuna-example-plotly.png">
+        
+        
+        <img class="plot" src="importance-pytorch_simple.py in optuna-example-matplotlib.png">
+        
+    </div>
+    
+</div>
+</body>
+</html>
