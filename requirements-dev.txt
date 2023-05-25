@@ -1,7 +1,0 @@
--r requirements.txt
-
-isort
-black
-flake8
-mypy
-
