@@ -74,7 +74,7 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
         trial.set_user_attr("constraint", [1000 - v0, x - 10, y - 10])
         return v0
 
-    def constraints(trial):
+    def constraints(trial: optuna.Trial) -> list[float]:
         return trial.user_attrs["constraint"]
 
     study = optuna.create_study(
