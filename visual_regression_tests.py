@@ -1,5 +1,6 @@
 import argparse
 import functools
+import logging
 import os
 from typing import Any
 from typing import Callable
@@ -16,8 +17,6 @@ import matplotlib.pylab as plt
 import optuna
 from optuna import Study
 from optuna.exceptions import ExperimentalWarning
-import optuna.visualization as plotly_visualization
-import optuna.visualization.matplotlib as matplotlib_visualization
 
 from studies import create_intermediate_value_studies
 from studies import create_multi_objective_studies
@@ -25,7 +24,11 @@ from studies import create_multiple_single_objective_studies
 from studies import create_pytorch_study
 from studies import create_single_objective_studies
 from studies import create_single_objective_studies_for_timeline
+from studies import create_terminator_studies
+from studies import create_terminator_studies_with_validation_score
 from studies import StudiesType
+import optuna.visualization as plotly_visualization
+import optuna.visualization.matplotlib as matplotlib_visualization
 
 
 FigureType = TypeVar("FigureType")
@@ -94,13 +97,15 @@ def generate_plot_files(
                 margin={"l": 10, "r": 10},
             )
             plotly_fig.write_image(plotly_filepath)
-        except:  # NOQA
+        except Exception as e:  # NOQA
+            logging.exception(f"Exception occurred while executing plotly visualization function")
             plotly_filename = ""
 
         try:
             matplotlib_plot(study)
             plt.savefig(matplotlib_filepath, bbox_inches="tight", dpi=dpi)
-        except:  # NOQA
+        except Exception as e:  # NOQA
+            logging.exception(f"Exception occurred while executing matplotlib visualization function")
             matplotlib_filename = ""
 
         files.append((title, plotly_filename, matplotlib_filename))
@@ -257,6 +262,21 @@ def generate_timeline_plots(
     )
 
 
+def generate_terminator_plots(
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
+) -> List[Tuple[str, str, str]]:
+    filename_prefix = "terminator-improvement"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
+    return generate_plot_files(
+        studies,
+        base_dir,
+        wrap_plot_func(lambda s: plotly_visualization.plot_terminator_improvement(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_terminator_improvement(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
+    )
+
+
 def main() -> None:
     if not os.path.exists(abs_output_dir):
         os.mkdir(abs_output_dir)
@@ -272,7 +292,11 @@ def main() -> None:
     multi_objective_studies = create_multi_objective_studies()
     print("Creating studies that have intermediate values")
     intermediate_value_studies = create_intermediate_value_studies()
+    print("Creating studies for timeline plot")
     single_objective_studies_for_timeline = create_single_objective_studies_for_timeline()
+    print("Creating studies for optuna terminator")
+    terminator_studies = create_terminator_studies()
+    terminator_studies_with_val = create_terminator_studies_with_validation_score()
 
     if args.heavy:
         print("Creating pytorch study")
@@ -323,6 +347,8 @@ def main() -> None:
             {},
         ),
         ("plot_timeline", single_objective_studies_for_timeline, generate_timeline_plots, {}),
+        ("plot_terminator_improvement", terminator_studies, generate_terminator_plots, {}),
+        ("plot_terminator_improvement", terminator_studies_with_val, generate_terminator_plots, {"plot_error": True}),
     ]:
         assert isinstance(plot_kwargs, Dict)
         plot_files = generate(studies, abs_output_dir, plot_kwargs)

@@ -5,6 +5,8 @@ kaleido
 jinja2
 scikit-learn
 optuna-fast-fanova
+lightgbm
+botorch
 
 torch
 torchvision
