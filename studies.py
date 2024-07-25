@@ -73,7 +73,7 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
         y = trial.suggest_float("y", -15, 30)
         v0 = 4 * x**2 + 4 * y**2
 
-        c0 = (x - 5) ** 2 + y ** 2 - 25
+        c0 = (x - 5) ** 2 + y**2 - 25
         c1 = -((x - 8) ** 2) - (y + 3) ** 2 + 7.7
         trial.set_user_attr("constraint", (c0, c1))
         return v0
