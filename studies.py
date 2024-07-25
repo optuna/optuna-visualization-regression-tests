@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import time
 from typing import List
@@ -62,6 +64,29 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
         return x**2
 
     study.optimize(objective_single_none_categorical, n_trials=10)
+    studies.append((study.study_name, study))
+
+    # Single-objective study with constraints
+    # https://optuna.readthedocs.io/en/stable/faq.html#how-can-i-optimize-a-model-with-some-constraints
+    def objective_constraints(trial: optuna.Trial) -> float:
+        x = trial.suggest_float("x", -15, 30)
+        y = trial.suggest_float("y", -15, 30)
+        v0 = 4 * x**2 + 4 * y**2
+
+        c0 = (x - 5) ** 2 + y**2 - 25
+        c1 = -((x - 8) ** 2) - (y + 3) ** 2 + 7.7
+        trial.set_user_attr("constraint", (c0, c1))
+        return v0
+
+    def constraints(trial: optuna.Trial) -> list[float]:
+        return trial.user_attrs["constraint"]
+
+    study = optuna.create_study(
+        study_name="A single objective constraint optimization study",
+        storage=storage,
+        sampler=optuna.samplers.TPESampler(constraints_func=constraints),
+    )
+    study.optimize(objective_constraints, n_trials=100)
     studies.append((study.study_name, study))
 
     # No trials single-objective study
