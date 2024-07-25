@@ -18,6 +18,7 @@ from optuna import Study
 from optuna.exceptions import ExperimentalWarning
 import optuna.visualization as plotly_visualization
 import optuna.visualization.matplotlib as matplotlib_visualization
+from optuna.importance import PedAnovaImportanceEvaluator
 
 from studies import create_intermediate_value_studies
 from studies import create_multi_objective_studies
@@ -29,11 +30,6 @@ from studies import StudiesType
 
 
 FigureType = TypeVar("FigureType")
-
-try:
-    from optuna_fast_fanova import FanovaImportanceEvaluator
-except ImportError:
-    from optuna.importance import FanovaImportanceEvaluator
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -139,6 +135,21 @@ def generate_contour_plots(
     )
 
 
+def generate_rank_plots(
+    studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
+) -> List[Tuple[str, str, str]]:
+    filename_prefix = "rank"
+    if len(plot_kwargs) > 0:
+        filename_prefix = f"{filename_prefix}-{stringify_plot_kwargs(plot_kwargs)}"
+    return generate_plot_files(
+        studies,
+        base_dir,
+        wrap_plot_func(lambda s: plotly_visualization.plot_rank(s, **plot_kwargs)),
+        wrap_plot_func(lambda s: matplotlib_visualization.plot_rank(s, **plot_kwargs)),
+        filename_prefix=filename_prefix,
+    )
+
+
 def generate_edf_plots(
     studies: List[Tuple[str, StudiesType]], base_dir: str, plot_kwargs: Dict[str, Any]
 ) -> List[Tuple[str, str, str]]:
@@ -181,12 +192,12 @@ def generate_param_importances_plots(
         base_dir,
         wrap_plot_func(
             lambda s: plotly_visualization.plot_param_importances(
-                s, evaluator=FanovaImportanceEvaluator(seed=seed), **plot_kwargs
+                s, evaluator=PedAnovaImportanceEvaluator(), **plot_kwargs
             )
         ),
         wrap_plot_func(
             lambda s: matplotlib_visualization.plot_param_importances(
-                s, evaluator=FanovaImportanceEvaluator(seed=seed), **plot_kwargs
+                s, evaluator=PedAnovaImportanceEvaluator(), **plot_kwargs
             )
         ),
         filename_prefix=filename_prefix,
@@ -302,6 +313,7 @@ def main() -> None:
         ),
         ("plot_slice", single_objective_studies, generate_slice_plots, {}),
         ("plot_contour", single_objective_studies, generate_contour_plots, {}),
+        ("plot_rank", single_objective_studies, generate_rank_plots, {}),
         (
             "plot_parallel_coordinate",
             single_objective_studies,

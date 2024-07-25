@@ -1,10 +1,9 @@
-optuna>=3.0.0b1
+optuna>=3.6.0
 matplotlib
 plotly
 kaleido
 jinja2
 scikit-learn
-optuna-fast-fanova
 
 torch
 torchvision
