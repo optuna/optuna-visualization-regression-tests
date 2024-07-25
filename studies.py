@@ -67,11 +67,15 @@ def create_single_objective_studies() -> List[Tuple[str, StudiesType]]:
     studies.append((study.study_name, study))
 
     # Single-objective study with constraints
+    # https://optuna.readthedocs.io/en/stable/faq.html#how-can-i-optimize-a-model-with-some-constraints
     def objective_constraints(trial: optuna.Trial) -> float:
         x = trial.suggest_float("x", -15, 30)
         y = trial.suggest_float("y", -15, 30)
         v0 = 4 * x**2 + 4 * y**2
-        trial.set_user_attr("constraint", [1000 - v0, x - 10, y - 10])
+
+        c0 = (x - 5) ** 2 + y ** 2 - 25
+        c1 = -((x - 8) ** 2) - (y + 3) ** 2 + 7.7
+        trial.set_user_attr("constraint", (c0, c1))
         return v0
 
     def constraints(trial: optuna.Trial) -> list[float]:
