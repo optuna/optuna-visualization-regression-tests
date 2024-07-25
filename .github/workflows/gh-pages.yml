@@ -8,13 +8,13 @@ jobs:
   pull:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # Fetch all history for .GitInfo and .Lastmod
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.x'
       - name: Install Optuna@master
         run: |
           git config user.name github-actions
@@ -28,11 +28,11 @@ jobs:
           path: ./FashionMNIST
           key: fasion-mnist
       - name: Install additional dependencies
-        run: pip install matplotlib plotly kaleido jinja2 scikit-learn optuna-fast-fanova torch torchvision
+        run: pip install matplotlib plotly kaleido jinja2 scikit-learn torch torchvision
       - name: Generate HTML
         run: python visual_regression_tests.py --heavy --output-dir ./docs
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
